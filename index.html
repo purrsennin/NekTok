@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TikTok Downloader - SwnTik</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    :root {
+      --primary: #0056ff;
+      --primary-light: #3d7dff;
+      --secondary: #00c853;
+      --secondary-hover: #00b046;
+      --text: #2d3748;
+      --text-light: #4a5568;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+    }
+
+    .container {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      padding: 2rem 1.5rem;
+      width: 100%;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+      transform: rotate(30deg);
+      z-index: 0;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      width: 100%;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .logo {
+      margin-bottom: 1.5rem;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .logo i {
+      font-size: 2.2rem;
+      animation: bounce 2s infinite;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      color: rgba(255,255,255,0.9);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      margin-bottom: 2rem;
+      transform: translateY(0);
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      width: 100%;
+      position: relative;
+    }
+
+    input {
+      flex: 1;
+      padding: 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1rem;
+      background-color: #fff;
+      color: var(--text);
+      transition: var(--transition);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 86, 255, 0.2);
+    }
+
+    .paste-btn {
+      padding: 0 1.5rem;
+      background-color: #e0e7ff;
+      border: none;
+      border-radius: 12px;
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .paste-btn:hover {
+      background-color: #d1d9ff;
+      transform: translateY(-2px);
+    }
+
+    .download-btn {
+      width: 100%;
+      padding: 1rem;
+      background-color: var(--secondary);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 10px rgba(0, 200, 83, 0.3);
+    }
+
+    .download-btn:hover {
+      background-color: var(--secondary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 200, 83, 0.4);
+    }
+
+    #loading {
+      font-size: 1rem;
+      margin: 1.5rem 0;
+      color: #fff;
+      display: none;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    #result {
+      margin-top: 2rem;
+      width: 100%;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .result-card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+
+    .result-card p {
+      color: var(--text-light);
+      margin-bottom: 0.75rem;
+    }
+
+    .result-card strong {
+      color: var(--text);
+    }
+
+    video, img {
+      width: 100%;
+      margin: 1rem 0;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transition: var(--transition);
+    }
+
+    video:hover, img:hover {
+      transform: scale(1.01);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .media-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .media-item {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transition: var(--transition);
+    }
+
+    .media-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .media-download-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: var(--primary);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 0.75rem;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+    }
+
+    .media-download-btn:hover {
+      background-color: var(--primary-light);
+    }
+
+    .info-section {
+      width: 100%;
+      margin-top: 3rem;
+      text-align: left;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: #fff;
+      position: relative;
+      display: inline-block;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background-color: var(--secondary);
+      border-radius: 2px;
+    }
+
+    .info-content {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .info-content p {
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 1rem;
+    }
+
+    .qna-item {
+      margin-bottom: 1.5rem;
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 1.25rem;
+      transition: var(--transition);
+    }
+
+    .qna-item:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .question {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #fff;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .question i {
+      color: var(--secondary);
+    }
+
+    .answer {
+      color: rgba(255,255,255,0.8);
+      font-size: 0.95rem;
+      padding-left: 1.75rem;
+    }
+
+    footer {
+      background-color: #1a202c;
+      color: #fff;
+      padding: 3rem 1.5rem 2rem;
+      text-align: center;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      text-align: left;
+    }
+
+    .footer-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-title {
+      font-size: 1.25rem;
+      margin-bottom: 1.25rem;
+      color: #fff;
+      position: relative;
+      display: inline-block;
+    }
+
+    .footer-title::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 40px;
+      height: 3px;
+      background-color: var(--secondary);
+      border-radius: 2px;
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 0.75rem;
+    }
+
+    .footer-links a {
+      color: #a0aec0;
+      text-decoration: none;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .footer-links a:hover {
+      color: #fff;
+      transform: translateX(5px);
+    }
+
+    .footer-links a i {
+      width: 20px;
+      text-align: center;
+    }
+
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #a0aec0;
+    }
+
+    .contact-item i {
+      color: var(--secondary);
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .social-link {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #2d3748;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .social-link:hover {
+      transform: translateY(-3px);
+      background-color: var(--primary);
+    }
+
+    .copyright {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #2d3748;
+      color: #a0aec0;
+      font-size: 0.9rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .logo {
+        font-size: 2rem;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      .input-group {
+        flex-direction: column;
+      }
+      
+      .paste-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem;
+      }
+      
+      .footer-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 1.5rem 1rem;
+      }
+      
+      .card {
+        padding: 1.5rem;
+      }
+      
+      .logo {
+        font-size: 1.8rem;
+      }
+      
+      .section-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="content">
+      <div class="logo">
+        <i class="fas fa-video"></i>
+        <span>SwnTik</span>
+      </div>
+      <h1>Download Video TikTok Tanpa Watermark</h1>
+      <p>Unduh video TikTok favorit Anda dengan kualitas tinggi tanpa watermark. Cepat, mudah, dan gratis untuk semua perangkat.</p>
+      
+      <div class="card">
+        <div class="input-group">
+          <input type="text" id="urlInput" placeholder="Tempel tautan TikTok di sini" />
+          <button class="paste-btn" onclick="pasteLink()">
+            <i class="fas fa-paste"></i>
+            Tempel
+          </button>
+        </div>
+        <button class="download-btn" onclick="download()">
+          <i class="fas fa-download"></i>
+          Download Sekarang
+        </button>
+      </div>
+
+      <div id="loading" style="display:none;">
+        <span class="loading-spinner"></span>
+        Memproses video TikTok...
+      </div>
+      <div id="result"></div>
+
+      <div class="info-section">
+        <h2 class="section-title">Tentang SwnTik</h2>
+        <div class="info-content">
+          <p>SwnTik adalah platform unduhan video TikTok yang dirancang untuk memberikan pengalaman terbaik kepada pengguna. Dengan teknologi canggih kami, Anda dapat mengunduh video TikTok tanpa watermark dalam berbagai kualitas, termasuk HD.</p>
+          <p>Layanan kami sepenuhnya gratis, tanpa biaya tersembunyi, dan dapat diakses dari semua perangkat termasuk smartphone, tablet, dan komputer. Tidak perlu instal aplikasi tambahan!</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h2 class="section-title">Panduan Penggunaan</h2>
+        <div class="info-content">
+          <div class="qna-item">
+            <div class="question">
+              <i class="fas fa-question-circle"></i>
+              Bagaimana cara mengunduh video TikTok?
+            </div>
+            <div class="answer">
+              Salin link video TikTok dari aplikasi, tempelkan di kolom di atas, lalu klik tombol "Download Sekarang". Video akan diproses dan siap diunduh dalam beberapa detik.
+            </div>
+          </div>
+          
+          <div class="qna-item">
+            <div class="question">
+              <i class="fas fa-question-circle"></i>
+              Apakah video yang diunduh memiliki watermark?
+            </div>
+            <div class="answer">
+              Tidak! SwnTik secara otomatis menghilangkan watermark TikTok dari video yang Anda unduh, sehingga Anda mendapatkan video bersih tanpa logo TikTok.
+            </div>
+          </div>
+          
+          <div class="qna-item">
+            <div class="question">
+              <i class="fas fa-question-circle"></i>
+              Apakah ada batasan unduhan?
+            </div>
+            <div class="answer">
+              Tidak ada batasan! Anda bisa mengunduh sebanyak mungkin video TikTok yang Anda inginkan, kapan saja, sepenuhnya gratis.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3 class="footer-title">Tentang Kami</h3>
+        <p>SwnTik adalah layanan unduhan video TikTok tanpa watermark yang cepat, aman, dan gratis untuk semua pengguna.</p>
+        <div class="social-links">
+          <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+          <a href="https://instagram.com/sennhndra" class="social-link"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+      
+      <div class="footer-section">
+        <h3 class="footer-title">Layanan</h3>
+        <ul class="footer-links">
+          <li><a href="#"><i class="fas fa-download"></i> Download TikTok</a></li>
+          <li><a href="#"><i class="fas fa-water"></i> Hapus Watermark</a></li>
+          <li><a href="#"><i class="fas fa-hd"></i> Video HD</a></li>
+          <li><a href="#"><i class="fas fa-music"></i> Ekstrak Audio</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h3 class="footer-title">Hubungi Kami</h3>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>support@archivends.my.id</span>
+          </div>
+          <div class="contact-item">
+            <i class="fab fa-instagram"></i>
+            <span>@sennhndra</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone-alt"></i>
+            <span>+62 838 4195 1316</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="copyright">
+      &copy; 2025 SwnTik Downloader. All Rights Reserved.
+    </div>
+  </footer>
+
+  <script>
+    async function pasteLink() {
+      try {
+        const text = await navigator.clipboard.readText();
+        document.getElementById("urlInput").value = text;
+        
+        // Add animation feedback
+        const input = document.getElementById("urlInput");
+        input.classList.add('pasted');
+        setTimeout(() => input.classList.remove('pasted'), 500);
+      } catch (err) {
+        alert("Gagal mengakses clipboard: " + err.message);
+      }
+    }
+
+    async function download() {
+      const url = document.getElementById("urlInput").value;
+      const loading = document.getElementById("loading");
+      const result = document.getElementById("result");
+      result.innerHTML = "";
+      
+      if (!url) {
+        showError("Masukkan URL TikTok!");
+        return;
+      }
+      
+      if (!url.includes("tiktok.com")) {
+        showError("URL harus dari TikTok!");
+        return;
+      }
+
+      loading.style.display = "block";
+
+      try {
+        const data = await tiktokDownloaderVideo(url);
+        loading.style.display = "none";
+
+        let html = `
+          <div class="result-card">
+            <p><strong>Judul:</strong> ${data.title}</p>
+            <p><strong>Author:</strong> ${data.author.nickname}</p>
+            <p><strong>Durasi:</strong> ${data.duration}</p>
+            <p><strong>Tanggal Upload:</strong> ${data.taken_at}</p>
+          </div>
+          
+          <div class="media-container">
+        `;
+
+        html += data.data.map(media => {
+          const label = {
+            photo: "Gambar",
+            watermark: "Dengan Watermark",
+            nowatermark: "Tanpa Watermark",
+            nowatermark_hd: "HD Tanpa Watermark"
+          }[media.type] || "Media";
+
+          const ext = media.url.includes(".mp3") ? "audio" : media.url.includes(".jpg") || media.url.includes(".png") ? "img" : "video";
+
+          let mediaElement = "";
+          if (ext === "img") {
+            mediaElement = `<img src="${media.url}" alt="${data.title}" loading="lazy">`;
+          } else if (ext === "audio") {
+            mediaElement = `
+              <div style="background: #f8f9fa; border-radius: 12px; padding: 1rem;">
+                <audio controls src="${media.url}" style="width:100%;"></audio>
+              </div>
+            `;
+          } else {
+            mediaElement = `<video controls src="${media.url}" poster="${data.cover}"></video>`;
+          }
+
+          return `
+            <div class="media-item">
+              <h4>${label}</h4>
+              ${mediaElement}
+              <a href="${media.url}" download class="media-download-btn">
+                <i class="fas fa-download"></i> Download ${label}
+              </a>
+            </div>
+          `;
+        }).join("");
+
+        html += `</div>`;
+        result.innerHTML = html;
+        
+        // Smooth scroll to result
+        result.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        loading.style.display = "none";
+        showError(`Terjadi kesalahan: ${err.message}`);
+      }
+    }
+    
+    function showError(message) {
+      const result = document.getElementById("result");
+      result.innerHTML = `
+        <div class="result-card" style="background-color: #fff5f5; border-left: 4px solid #f56565;">
+          <p style="color: #f56565;"><i class="fas fa-exclamation-circle"></i> <strong>Error:</strong> ${message}</p>
+        </div>
+      `;
+      result.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function tiktokDownloaderVideo(url) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          let data = [];
+
+          function formatNumber(integer) {
+            return Number(parseInt(integer)).toLocaleString().replace(/,/g, ".");
+          }
+
+          function formatDate(n, locale = "id-ID") {
+            let d = new Date(n * 1000);
+            return d.toLocaleString(locale, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+              hour: "numeric",
+              minute: "numeric"
+            });
+          }
+
+          let domain = "https://www.tikwm.com/api/";
+          let res = (await axios.post(domain, {}, {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+              "Referer": "https://www.tikwm.com/",
+              "User-Agent": "Mozilla/5.0 (Linux; Android 10)"
+            },
+            params: {
+              url,
+              count: 12,
+              cursor: 0,
+              web: 1,
+              hd: 1
+            }
+          })).data.data;
+
+          if (!res.size && res.images) {
+            res.images.forEach(v => {
+              data.push({ type: "photo", url: v });
+            });
+          } else {
+            data.push({
+              type: "watermark",
+              url: "https://www.tikwm.com" + res.wmplay
+            }, {
+              type: "nowatermark",
+              url: "https://www.tikwm.com" + res.play
+            }, {
+              type: "nowatermark_hd",
+              url: "https://www.tikwm.com" + res.hdplay
+            });
+          }
+
+          resolve({
+            status: true,
+            title: res.title,
+            taken_at: formatDate(res.create_time),
+            region: res.region,
+            id: res.id,
+            duration: res.duration + " detik",
+            cover: "https://www.tikwm.com" + res.cover,
+            music_info: {
+              title: res.music_info.title,
+              author: res.music_info.author,
+              url: "https://www.tikwm.com" + (res.music || res.music_info.play)
+            },
+            data,
+            author: {
+              nickname: res.author.nickname
+            }
+          });
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+    
+    // Add animation to elements when they come into view
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate');
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('.info-section, .card').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
